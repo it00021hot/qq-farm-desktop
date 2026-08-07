@@ -3,7 +3,7 @@ module github.com/it00021hot/qq-farm-desktop
 go 1.26.0
 
 require (
-	github.com/it00021hot/qq-farm-core v0.1.1
+	github.com/it00021hot/qq-farm-core v0.1.2
 	github.com/wailsapp/wails/v3 v3.0.0-beta.4
 )
 

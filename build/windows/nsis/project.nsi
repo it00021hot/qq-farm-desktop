@@ -7,7 +7,7 @@
 !define INFO_COMPANYNAME    "QQFarm"
 !define INFO_PRODUCTNAME    "QQ Farm Assistant"
 !ifndef INFO_PRODUCTVERSION
-    !define INFO_PRODUCTVERSION "0.1.1"
+    !define INFO_PRODUCTVERSION "0.1.2"
 !endif
 !define INFO_COPYRIGHT      "(c) 2026, QQFarm"
 

@@ -10,11 +10,11 @@
         <key>CFBundleIdentifier</key>
             <string>com.qqfarm.desktop</string>
         <key>CFBundleVersion</key>
-            <string>0.1.1</string>
+            <string>0.1.2</string>
         <key>CFBundleGetInfoString</key>
             <string>QQ农场智能助手桌面端</string>
         <key>CFBundleShortVersionString</key>
-            <string>0.1.1</string>
+            <string>0.1.2</string>
         <key>CFBundleIconFile</key>
             <string>icons</string>
         <key>CFBundleDisplayName</key>
