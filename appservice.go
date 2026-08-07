@@ -5,7 +5,7 @@ import (
 	"os/exec"
 	"runtime"
 
-	"github.com/MQEnergy/go-skeleton/pkg/appserver"
+	"github.com/it00021hot/qq-farm-core/pkg/appserver"
 )
 
 // AppService exposes thin desktop helpers to the WebView.

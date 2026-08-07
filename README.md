@@ -1,6 +1,6 @@
 # QQ农场智能助手 · 桌面端 (Wails v3)
 
-基于 [Wails v3](https://v3.wails.io/) 的 macOS 桌面壳：嵌入 Vue 前端，进程内启动现有 Fiber API（`127.0.0.1:9528`），保留农场 WASM / WebSocket 能力。
+基于 [Wails v3](https://v3.wails.io/) 的桌面壳：嵌入 Vue 前端，进程内启动现有 Fiber API（`127.0.0.1:9528`），保留农场 WASM / WebSocket 能力。
 
 > Wails v3 目前为 beta；CLI 请锁定 `wails3@v3.0.0-beta.4` 或与本仓库 `go.mod` 一致。
 
@@ -12,10 +12,10 @@ WebView (embedded Vue dist)
     ▼
 Wails process
   ├─ frontend/dist (embed)
-  └─ go-skeleton/pkg/appserver  →  Fiber + farm runtime
+  └─ qq-farm-core/pkg/appserver  →  Fiber + farm runtime
 ```
 
-- 无头 / Web 开发模式不变：`go-framework` 的 `make run` + `vue-framework` 的 `pnpm dev`
+- 无头 / Web 开发模式不变：`qq-farm-core` 的 `make run` + `qq-farm-web` 的 `pnpm dev`
 - 桌面数据目录（sqlite / logs / tsdk）：`~/Library/Application Support/QQFarm`
 - 只读资源（wasm / gameConfig）：`.app/Contents/Resources/resource/farm`
 
@@ -33,10 +33,10 @@ wails3 doctor
 
 ```bash
 # 终端 1
-cd go-framework && make run
+cd qq-farm-core && make run
 
 # 终端 2
-cd vue-framework && pnpm dev
+cd qq-farm-web && pnpm dev
 ```
 
 桌面一体调试：
@@ -84,13 +84,13 @@ chmod +x scripts/build-windows-exe.sh
 
 | 入口 | 用途 |
 |------|------|
-| [`go-framework/cmd/app`](../go-framework/cmd/app) | 纯 HTTP 服务（浏览器 / 远程） |
+| [`qq-farm-core/cmd/app`](../qq-farm-core/cmd/app) | 纯 HTTP 服务（浏览器 / 远程） |
 | [`desktop/`](.) | 桌面窗口 + 同进程 API |
 
-业务逻辑共用 `go-skeleton`；桌面通过公开包 [`pkg/appserver`](../go-framework/pkg/appserver) 启动（避免跨 module 引用 `internal/`）。
+业务逻辑共用 `qq-farm-core`；桌面通过公开包 [`pkg/appserver`](../qq-farm-core/pkg/appserver) 启动（避免跨 module 引用 `internal/`）。
 
 ## 前端 desktop mode
 
-- [`vue-framework/.env.desktop`](../vue-framework/.env.desktop)：`VITE_SERVICE_BASE_URL=http://127.0.0.1:9528`，`hash` 路由，关闭代理
+- [`qq-farm-web/.env.desktop`](../qq-farm-web/.env.desktop)：`VITE_SERVICE_BASE_URL=http://127.0.0.1:9528`，`hash` 路由，关闭代理
 - `pnpm build:desktop`
 - WebSocket 从 `VITE_SERVICE_BASE_URL` 推导 host（见 `src/hooks/business/farm-ws.ts`）

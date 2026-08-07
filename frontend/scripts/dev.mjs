@@ -3,7 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const vueRoot = path.resolve(__dirname, '..', '..', '..', 'vue-framework');
+const vueRoot = path.resolve(__dirname, '..', '..', '..', 'qq-farm-web');
 
 let port = process.env.WAILS_VITE_PORT || '9245';
 const portIdx = process.argv.indexOf('--port');

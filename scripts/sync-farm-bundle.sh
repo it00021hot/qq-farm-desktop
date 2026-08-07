@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Sync go-framework farm resources into desktop/bundled, dereferencing symlinks
+# Sync qq-farm-core farm resources into desktop/bundled, dereferencing symlinks
 # so go:embed gets real seed_images_named PNGs (not a broken absolute symlink).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-SRC="$ROOT/../go-framework/resource/farm"
+SRC="$ROOT/../qq-farm-core/resource/farm"
 DEST="$ROOT/bundled/resource/farm"
 
 if [[ ! -d "$SRC" ]]; then

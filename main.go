@@ -8,7 +8,7 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/MQEnergy/go-skeleton/pkg/appserver"
+	"github.com/it00021hot/qq-farm-core/pkg/appserver"
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
 

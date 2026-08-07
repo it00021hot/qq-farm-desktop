@@ -1,9 +1,9 @@
-module github.com/MQEnergy/qq-farm-desktop
+module github.com/it00021hot/qq-farm-desktop
 
 go 1.26.0
 
 require (
-	github.com/MQEnergy/go-skeleton v0.0.0
+	github.com/it00021hot/qq-farm-core v0.1.0
 	github.com/wailsapp/wails/v3 v3.0.0-beta.4
 )
 
@@ -118,5 +118,3 @@ require (
 	modernc.org/memory v1.11.0 // indirect
 	modernc.org/sqlite v1.44.3 // indirect
 )
-
-replace github.com/MQEnergy/go-skeleton => ../go-framework

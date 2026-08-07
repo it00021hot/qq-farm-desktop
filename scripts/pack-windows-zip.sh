@@ -15,7 +15,7 @@ mkdir -p "$STAGE/resource"
 cp bin/qq-farm.exe "$STAGE/"
 mkdir -p bin/resource
 if [[ ! -d bin/resource/farm ]]; then
-  cp -R ../go-framework/resource/farm bin/resource/farm
+  cp -R ../qq-farm-core/resource/farm bin/resource/farm
 fi
 cp -R bin/resource/farm "$STAGE/resource/farm"
 

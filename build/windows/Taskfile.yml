@@ -120,8 +120,8 @@ tasks:
     preconditions:
       - sh: '[ "{{.INSTALL_SCOPE}}" = "user" ] || [ "{{.INSTALL_SCOPE}}" = "machine" ]'
         msg: "INSTALL_SCOPE must be 'user' or 'machine', got '{{.INSTALL_SCOPE}}'"
-      - sh: test -d "{{.ROOT_DIR}}/../go-framework/resource/farm"
-        msg: "go-framework/resource/farm not found (needed for Windows installer)"
+      - sh: test -d "{{.ROOT_DIR}}/../qq-farm-core/resource/farm"
+        msg: "qq-farm-core/resource/farm not found (needed for Windows installer)"
     cmds:
       # Stage farm resources next to the binary for NSIS File /r
       - |

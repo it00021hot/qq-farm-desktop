@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const frontendRoot = path.resolve(__dirname, '..');
 const desktopRoot = path.resolve(frontendRoot, '..');
-const vueRoot = path.resolve(desktopRoot, '..', 'vue-framework');
+const vueRoot = path.resolve(desktopRoot, '..', 'qq-farm-web');
 const distDir = path.join(frontendRoot, 'dist');
 const vueDist = path.join(vueRoot, 'dist');
 
@@ -24,16 +24,16 @@ function copyDir(src, dest) {
 }
 
 if (!fs.existsSync(vueRoot)) {
-  console.error('vue-framework not found at', vueRoot);
+  console.error('qq-farm-web not found at', vueRoot);
   process.exit(1);
 }
 
 run('pnpm', ['run', 'build:desktop'], vueRoot);
 
 if (!fs.existsSync(path.join(vueDist, 'index.html'))) {
-  console.error('vue-framework build did not produce dist/index.html');
+  console.error('qq-farm-web build did not produce dist/index.html');
   process.exit(1);
 }
 
 copyDir(vueDist, distDir);
-console.log('Copied vue-framework/dist → desktop/frontend/dist');
+console.log('Copied qq-farm-web/dist → desktop/frontend/dist');
