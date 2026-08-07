@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"log"
+	"net"
+	"net/http"
 	"time"
 
 	"github.com/it00021hot/qq-farm-desktop/internal/ghrelease"
@@ -13,6 +15,28 @@ import (
 
 const githubReleaseRepo = "it00021hot/qq-farm-desktop"
 
+// newUpdaterHTTPClient builds the HTTP client used for the GitHub API and
+// asset downloads. The github provider's default client has an overall
+// 30s Timeout that spans the whole request including the body stream, which
+// truncates larger downloads. We keep per-phase timeouts (dial, TLS, first
+// response byte) but no overall deadline — the caller's context governs the
+// total duration, so a slow-but-progressing download is never cut off.
+func newUpdaterHTTPClient() *http.Client {
+	dialer := &net.Dialer{Timeout: 10 * time.Second, KeepAlive: 30 * time.Second}
+	return &http.Client{
+		Transport: &http.Transport{
+			Proxy:                 http.ProxyFromEnvironment,
+			DialContext:           dialer.DialContext,
+			TLSHandshakeTimeout:   10 * time.Second,
+			ResponseHeaderTimeout: 30 * time.Second,
+			IdleConnTimeout:       90 * time.Second,
+			MaxIdleConns:          10,
+			MaxIdleConnsPerHost:   4,
+			ForceAttemptHTTP2:     true,
+		},
+	}
+}
+
 // setupUpdater wires GitHub Releases auto-update. Manual checks use the
 // builtin window; startup only opens it when an update is available.
 func setupUpdater(app *application.App) {
@@ -20,6 +44,7 @@ func setupUpdater(app *application.App) {
 		Repository:    githubReleaseRepo,
 		ChecksumAsset: "SHA256SUMS",
 		AssetMatcher:  ghrelease.AssetMatcher,
+		HTTPClient:    newUpdaterHTTPClient(),
 	})
 	if err != nil {
 		log.Printf("updater: github provider: %v", err)
@@ -46,7 +71,7 @@ func setupUpdater(app *application.App) {
 
 	go func() {
 		time.Sleep(5 * time.Second)
-		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 		defer cancel()
 		rel, err := app.Updater.Check(ctx)
 		if err != nil {
@@ -64,7 +89,7 @@ func setupUpdater(app *application.App) {
 
 func checkForUpdates(app *application.App) {
 	go func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
 		defer cancel()
 		if err := app.Updater.CheckAndInstall(ctx); err != nil {
 			log.Printf("updater: check: %v", err)
