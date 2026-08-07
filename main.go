@@ -27,7 +27,7 @@ var trayTemplateIcon []byte
 // appVersion is overridden at release build via:
 //
 //	-ldflags "-X main.appVersion=1.2.3"
-var appVersion = "0.1.3"
+var appVersion = "0.1.4"
 
 func main() {
 	dataRoot, err := appserver.ResolveDataRoot()

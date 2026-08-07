@@ -26,9 +26,19 @@ func setupUpdater(app *application.App) {
 		return
 	}
 
+	// Open at the full update-flow size. Wails defaults to a compact 348×161
+	// card and grows later via SetSize; on macOS that resize is easy to miss,
+	// which clips the Restart & Apply buttons until the user enlarges manually.
 	if err := app.Updater.Init(updater.Config{
 		CurrentVersion: appVersion,
 		Providers:      []updater.Provider{gh},
+		Window: &updater.BuiltinWindow{
+			Options: updater.WindowOptions{
+				Title:  "软件更新",
+				Width:  560,
+				Height: 620,
+			},
+		},
 	}); err != nil {
 		log.Printf("updater: init: %v", err)
 		return
