@@ -79,11 +79,9 @@ jobs:
         working-directory: qq-farm-desktop
         env:
           VERSION: ${{ steps.ver.outputs.version }}
-          PATH: ${{ env.PATH }}
         run: |
-          export PATH="$(go env GOPATH)/bin:/c/Program Files (x86)/NSIS:$PATH"
-          # Git Bash path for makensis
-          if [[ -x "/c/Program Files (x86)/NSIS/makensis.exe" ]]; then
+          export PATH="$(go env GOPATH)/bin:$PATH"
+          if [[ -f "/c/Program Files (x86)/NSIS/makensis.exe" ]]; then
             export PATH="/c/Program Files (x86)/NSIS:$PATH"
           fi
           bash scripts/build-windows-installer.sh

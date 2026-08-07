@@ -29,6 +29,8 @@ p.write_text(text)
 print(f"Info.plist version → ${VERSION}")
 PY
 
+mkdir -p "${BIN_DIR}"
+
 bash scripts/sync-farm-bundle.sh
 (cd ../qq-farm-web && pnpm install --frozen-lockfile)
 (cd frontend && node scripts/build.mjs)

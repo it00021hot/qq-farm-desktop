@@ -11,6 +11,8 @@ VERSION="${VERSION#v}"
 ARCH="${ARCH:-amd64}"
 INSTALL_SCOPE="${INSTALL_SCOPE:-user}"
 
+mkdir -p bin
+
 bash scripts/sync-farm-bundle.sh
 (cd ../qq-farm-web && pnpm install --frozen-lockfile)
 (cd frontend && node scripts/build.mjs)
@@ -64,19 +66,28 @@ fi
 
 (
   cd build/windows/nsis
-  # Prefer makensis on PATH; fall back to common Windows install dirs
-  MAKENSIS=makensis
-  if ! command -v makensis >/dev/null 2>&1; then
+  # Prefer makensis on PATH; fall back to common Windows install dirs.
+  # Use -f (not -x): Git Bash often reports .exe as non-executable.
+  MAKENSIS=""
+  if command -v makensis >/dev/null 2>&1; then
+    MAKENSIS="$(command -v makensis)"
+  else
     for candidate in \
       "/c/Program Files (x86)/NSIS/makensis.exe" \
       "/c/Program Files/NSIS/makensis.exe" \
       "/mnt/c/Program Files (x86)/NSIS/makensis.exe"; do
-      if [[ -x "$candidate" ]]; then
+      if [[ -f "$candidate" ]]; then
         MAKENSIS="$candidate"
         break
       fi
     done
   fi
+  if [[ -z "$MAKENSIS" ]]; then
+    echo "makensis not found (install NSIS or add it to PATH)" >&2
+    exit 1
+  fi
+  echo "Using makensis: $MAKENSIS"
+  echo "NSIS binary arg: $NSIS_BINARY"
   "$MAKENSIS" \
     -DINFO_PRODUCTVERSION="$VERSION" \
     "${NSIS_SCOPE_FLAGS[@]}" \
