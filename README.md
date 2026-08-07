@@ -70,38 +70,50 @@ go build -tags production -o bin/qq-farm . && open bin/qq-farm.app
 | `QQFARM_RESOURCE_ROOT` | 覆盖资源根目录 |
 | `QQFARM_DATA_ROOT` | 覆盖可写数据目录 |
 
-## 打包
+## 安装与自动更新
 
-### Windows x64
+正式分发使用**安装包**（非便携双击 exe）。打 Git tag 后由 GitHub Actions 自动构建并上传到 [Releases](https://github.com/it00021hot/qq-farm-desktop/releases)。
 
-```bash
-cd qq-farm-desktop
-chmod +x scripts/build-windows-exe.sh
-./scripts/build-windows-exe.sh
-# 产物：bin/qq-farm.exe（单文件，农场资源已内嵌）
-```
+| 平台 | 首次安装 | 自动更新资产 |
+|------|----------|--------------|
+| Windows x64 | `qq-farm-windows-amd64-installer.exe`（用户级，无需管理员） | `qq-farm-windows-amd64.exe` |
+| macOS | `qq-farm-darwin.dmg`（拖到 Applications） | `qq-farm-darwin-universal.zip`（整包 `.app`） |
 
-| 文件 | 说明 |
-|------|------|
-| `bin/qq-farm.exe` | **推荐** Windows x64 单文件可执行程序 |
-| `bin/qq-farm-windows-amd64.zip` | 可选便携包（含 WebView2 安装引导） |
+客户端内置 Wails Updater：启动约 5 秒后静默检查 GitHub Releases；托盘 / macOS「应用」菜单有「检查更新」。校验依赖同 Release 中的 `SHA256SUMS`。
 
-目标机需 Windows 10+ 与 WebView2。打包脚本会先 `sync-farm-bundle`（展开 `seed_images_named`）并构建 `qq-farm-web` 的 `build:desktop`。
-
-### macOS
+### 发版
 
 ```bash
-cd qq-farm-desktop
-bash scripts/sync-farm-bundle.sh
-(cd frontend && node scripts/build.mjs)
-CGO_ENABLED=1 go build -tags production -trimpath -ldflags="-w -s" -o bin/qq-farm .
-# 组装 .app 见 build/darwin/Taskfile.yml，或沿用现有 bin/qq-farm.app 结构
+git tag v0.2.0
+git push origin v0.2.0
 ```
+
+Actions 会并行构建 Windows + macOS，汇总校验和后创建同名 Release。也可用 Actions 里的 `workflow_dispatch` 手动重跑。
+
+发版后验收见 [`docs/RELEASE_CHECKLIST.md`](docs/RELEASE_CHECKLIST.md)。
+
+### 本地打包（调试）
+
+```bash
+# Windows（需 makensis；可在 macOS/Linux 交叉编译 exe，NSIS 建议在 Windows 上打）
+VERSION=0.2.0 ./scripts/build-windows-installer.sh
+
+# macOS（须在 macOS 上，CGO + lipo）
+VERSION=0.2.0 ./scripts/build-macos-release.sh
+```
+
+便携 exe（不推荐分发）：
+
+```bash
+VERSION=0.2.0 ./scripts/build-windows-exe.sh
+```
+
+目标机需 Windows 10+ 与 WebView2；macOS 12+。无 Apple Developer ID 时，macOS 首次打开可能需在「隐私与安全性」中允许。
 
 ## 窗口与托盘
 
 - 关闭窗口 → 隐藏到系统托盘（不退出）
-- 托盘：显示主窗口 / 打开数据目录 / 关于 / 退出
+- 托盘：显示主窗口 / 打开数据目录 / 检查更新 / 关于 / 退出
 - macOS：隐藏标题栏 + 原生圆角与红绿灯；侧栏底部为品牌与账号切换
 - Windows：无边框；最小化 / 最大化 / 关闭并入顶栏右侧
 

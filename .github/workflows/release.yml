@@ -1,0 +1,216 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to build (e.g. v0.2.0); defaults to the triggering ref"
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+env:
+  GO_VERSION: "1.26.x"
+  WAILS_VERSION: "v3.0.0-beta.4"
+
+jobs:
+  windows:
+    name: Build Windows
+    runs-on: windows-latest
+    steps:
+      - name: Checkout desktop
+        uses: actions/checkout@v4
+        with:
+          path: qq-farm-desktop
+
+      - name: Checkout qq-farm-web
+        uses: actions/checkout@v4
+        with:
+          repository: it00021hot/qq-farm-web
+          path: qq-farm-web
+
+      - name: Checkout qq-farm-core
+        uses: actions/checkout@v4
+        with:
+          repository: it00021hot/qq-farm-core
+          path: qq-farm-core
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: qq-farm-desktop/go.sum
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+          cache-dependency-path: qq-farm-web/pnpm-lock.yaml
+
+      - name: Install NSIS
+        run: choco install nsis -y
+
+      - name: Install Wails CLI
+        shell: bash
+        run: go install github.com/wailsapp/wails/v3/cmd/wails3@${{ env.WAILS_VERSION }}
+
+      - name: Resolve version
+        id: ver
+        shell: bash
+        run: |
+          REF="${{ github.event.inputs.tag || github.ref_name }}"
+          VER="${REF#v}"
+          echo "version=$VER" >> "$GITHUB_OUTPUT"
+          echo "Building version $VER"
+
+      - name: Build installer + update exe
+        shell: bash
+        working-directory: qq-farm-desktop
+        env:
+          VERSION: ${{ steps.ver.outputs.version }}
+          PATH: ${{ env.PATH }}
+        run: |
+          export PATH="$(go env GOPATH)/bin:/c/Program Files (x86)/NSIS:$PATH"
+          # Git Bash path for makensis
+          if [[ -x "/c/Program Files (x86)/NSIS/makensis.exe" ]]; then
+            export PATH="/c/Program Files (x86)/NSIS:$PATH"
+          fi
+          bash scripts/build-windows-installer.sh
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-amd64
+          path: |
+            qq-farm-desktop/bin/qq-farm-windows-amd64.exe
+            qq-farm-desktop/bin/qq-farm-windows-amd64-installer.exe
+          if-no-files-found: error
+
+  macos:
+    name: Build macOS
+    runs-on: macos-latest
+    steps:
+      - name: Checkout desktop
+        uses: actions/checkout@v4
+        with:
+          path: qq-farm-desktop
+
+      - name: Checkout qq-farm-web
+        uses: actions/checkout@v4
+        with:
+          repository: it00021hot/qq-farm-web
+          path: qq-farm-web
+
+      - name: Checkout qq-farm-core
+        uses: actions/checkout@v4
+        with:
+          repository: it00021hot/qq-farm-core
+          path: qq-farm-core
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: qq-farm-desktop/go.sum
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+          cache-dependency-path: qq-farm-web/pnpm-lock.yaml
+
+      - name: Install Wails CLI
+        run: go install github.com/wailsapp/wails/v3/cmd/wails3@${{ env.WAILS_VERSION }}
+
+      - name: Resolve version
+        id: ver
+        run: |
+          REF="${{ github.event.inputs.tag || github.ref_name }}"
+          VER="${REF#v}"
+          echo "version=$VER" >> "$GITHUB_OUTPUT"
+          echo "Building version $VER"
+
+      - name: Build DMG + universal zip
+        working-directory: qq-farm-desktop
+        env:
+          VERSION: ${{ steps.ver.outputs.version }}
+        run: |
+          export PATH="$(go env GOPATH)/bin:$PATH"
+          bash scripts/build-macos-release.sh
+
+      - name: Upload macOS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-universal
+          path: |
+            qq-farm-desktop/bin/qq-farm-darwin-universal.zip
+            qq-farm-desktop/bin/qq-farm-darwin.dmg
+          if-no-files-found: error
+
+  publish:
+    name: Publish GitHub Release
+    needs: [windows, macos]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve version
+        id: ver
+        run: |
+          REF="${{ github.event.inputs.tag || github.ref_name }}"
+          VER="${REF#v}"
+          echo "tag=v${VER}" >> "$GITHUB_OUTPUT"
+          echo "version=$VER" >> "$GITHUB_OUTPUT"
+
+      - name: Download Windows artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-amd64
+          path: dist
+
+      - name: Download macOS artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-universal
+          path: dist
+
+      - name: Generate SHA256SUMS
+        working-directory: dist
+        run: |
+          sha256sum \
+            qq-farm-windows-amd64.exe \
+            qq-farm-windows-amd64-installer.exe \
+            qq-farm-darwin-universal.zip \
+            qq-farm-darwin.dmg \
+            > SHA256SUMS
+          cat SHA256SUMS
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.ver.outputs.tag }}
+          name: QQ Farm Desktop ${{ steps.ver.outputs.tag }}
+          generate_release_notes: true
+          files: |
+            dist/qq-farm-windows-amd64.exe
+            dist/qq-farm-windows-amd64-installer.exe
+            dist/qq-farm-darwin-universal.zip
+            dist/qq-farm-darwin.dmg
+            dist/SHA256SUMS
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

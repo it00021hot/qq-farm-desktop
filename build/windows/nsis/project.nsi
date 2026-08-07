@@ -1,12 +1,20 @@
 ####
 ## QQ Farm Assistant - Windows amd64 installer (classic NSIS, no MUI)
+## Default: per-user install (no admin) so in-app updates can replace the exe.
 ####
 
 !define INFO_PROJECTNAME    "qq-farm"
 !define INFO_COMPANYNAME    "QQFarm"
 !define INFO_PRODUCTNAME    "QQ Farm Assistant"
-!define INFO_PRODUCTVERSION "0.1.0"
+!ifndef INFO_PRODUCTVERSION
+    !define INFO_PRODUCTVERSION "0.1.1"
+!endif
 !define INFO_COPYRIGHT      "(c) 2026, QQFarm"
+
+; Prefer user-scope unless CI/task passes -DWAILS_INSTALL_SCOPE=machine
+!ifndef WAILS_INSTALL_SCOPE
+    !define WAILS_INSTALL_SCOPE "user"
+!endif
 
 !include "wails_tools.nsh"
 
@@ -20,7 +28,7 @@ VIAddVersionKey "LegalCopyright"  "${INFO_COPYRIGHT}"
 VIAddVersionKey "ProductName"     "${INFO_PRODUCTNAME}"
 
 Name "${INFO_PRODUCTNAME}"
-OutFile "..\..\..\bin\${INFO_PROJECTNAME}-${ARCH}-installer.exe"
+OutFile "..\..\..\bin\${INFO_PROJECTNAME}-windows-${ARCH}-installer.exe"
 !if "${WAILS_INSTALL_SCOPE}" == "user"
     InstallDir "$LOCALAPPDATA\Programs\${INFO_PRODUCTNAME}"
 !else
@@ -39,8 +47,7 @@ Section "Install"
     SetOutPath $INSTDIR
     !insertmacro wails.files
 
-    SetOutPath "$INSTDIR\resource"
-    File /r "../../../bin/resource/farm"
+    ; Farm assets are go:embed'd into the exe and extracted on first run.
 
     CreateDirectory "$SMPROGRAMS\${INFO_PRODUCTNAME}"
     CreateShortcut "$SMPROGRAMS\${INFO_PRODUCTNAME}\${INFO_PRODUCTNAME}.lnk" "$INSTDIR\${PRODUCT_EXECUTABLE}"
@@ -51,7 +58,6 @@ SectionEnd
 
 Section "Uninstall"
     !insertmacro wails.setShellContext
-    RMDir /r "$AppData\${PRODUCT_EXECUTABLE}"
     RMDir /r $INSTDIR
     Delete "$SMPROGRAMS\${INFO_PRODUCTNAME}\${INFO_PRODUCTNAME}.lnk"
     RMDir "$SMPROGRAMS\${INFO_PRODUCTNAME}"

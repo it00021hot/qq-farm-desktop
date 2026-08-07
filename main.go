@@ -24,7 +24,10 @@ var trayIcon []byte
 //go:embed build/trayicon-template.png
 var trayTemplateIcon []byte
 
-const appVersion = "0.1.0"
+// appVersion is overridden at release build via:
+//
+//	-ldflags "-X main.appVersion=1.2.3"
+var appVersion = "0.1.1"
 
 func main() {
 	dataRoot, err := appserver.ResolveDataRoot()
@@ -100,6 +103,7 @@ func main() {
 	})
 
 	setupMenusAndTray(app, window, appService)
+	setupUpdater(app)
 
 	if err := app.Run(); err != nil {
 		log.Fatal(err)

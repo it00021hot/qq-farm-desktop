@@ -40,6 +40,9 @@ func setupApplicationMenu(app *application.App, appService *AppService) {
 	appMenu.Add("打开数据目录").OnClick(func(ctx *application.Context) {
 		_ = appService.OpenDataDir()
 	})
+	appMenu.Add("检查更新").OnClick(func(ctx *application.Context) {
+		checkForUpdates(app)
+	})
 
 	app.Menu.Set(menu)
 }
@@ -68,6 +71,9 @@ func setupSystemTray(app *application.App, window *application.WebviewWindow, ap
 		_ = appService.OpenDataDir()
 	})
 	trayMenu.AddSeparator()
+	trayMenu.Add("检查更新").OnClick(func(ctx *application.Context) {
+		checkForUpdates(app)
+	})
 	trayMenu.Add("关于").OnClick(func(ctx *application.Context) {
 		app.Menu.ShowAbout()
 	})
