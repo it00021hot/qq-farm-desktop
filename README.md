@@ -10,15 +10,20 @@ Go 模块：`github.com/it00021hot/qq-farm-desktop`
 ## 架构
 
 ```
-WebView (embedded Vue dist)
-    │  HTTP + WS  →  http://127.0.0.1:9528
+WebView (embedded Vue dist)          Browser (本机)
+    │                                      │
+    │  Wails AssetServer                   │  SPA + API
+    │                                      ▼
+    │                               http://127.0.0.1:9528/
+    │  HTTP + WS  ─────────────────────────┘
     ▼
 Wails process
-  ├─ frontend/dist (embed)
-  └─ qq-farm-core/pkg/appserver  →  Fiber + farm runtime
+  ├─ frontend/dist (embed → WebView + Fiber)
+  └─ qq-farm-core/pkg/appserver  →  Fiber API + 可选 Web UI
 ```
 
-- 无头 / Web 开发模式：`qq-farm-core` 的 `make run` + `qq-farm-web` 的 `pnpm dev`
+- 桌面运行后，本机浏览器可打开 **http://127.0.0.1:9528/** 使用完整管理页面（与窗口共用同一套 API / JWT；托盘或 macOS「应用」菜单可点「在浏览器中打开」）
+- 无头 / 纯 Web 开发：`qq-farm-core` 的 `make run` + `qq-farm-web` 的 `pnpm dev`（core 单独启动不托管 SPA）
 - 桌面数据目录（sqlite / logs / tsdk）
   - macOS：`~/Library/Application Support/QQFarm`
   - Windows：`%LOCALAPPDATA%\QQFarm`
@@ -113,16 +118,16 @@ VERSION=0.2.0 ./scripts/build-windows-exe.sh
 ## 窗口与托盘
 
 - 关闭窗口 → 隐藏到系统托盘（不退出）
-- 托盘：显示主窗口 / 打开数据目录 / 检查更新 / 关于 / 退出
-- macOS：隐藏标题栏 + 原生圆角与红绿灯；侧栏底部为品牌与账号切换
-- Windows：无边框；最小化 / 最大化 / 关闭并入顶栏右侧
+- 托盘：显示主窗口 / **在浏览器中打开** / 打开数据目录 / 检查更新 / 关于 / 退出
+- macOS：隐藏标题栏 + 原生圆角与红绿灯；侧栏底部为品牌与账号切换；「应用」菜单含「在浏览器中打开」
+- Windows：无边框；最小化 / 最大化 / 关闭并入顶栏右侧（仅 WebView；浏览器打开同一页面时不显示窗控）
 
 ## 与纯 HTTP 服务的关系
 
 | 入口 | 用途 |
 |------|------|
-| [`qq-farm-core/cmd/app`](../qq-farm-core/cmd/app) | 纯 HTTP 服务（浏览器 / 远程） |
-| [`qq-farm-desktop/`](.) | 桌面窗口 + 同进程 API |
+| [`qq-farm-core/cmd/app`](../qq-farm-core/cmd/app) | 纯 HTTP API（需另挂 `qq-farm-web` dist 或 `pnpm dev`） |
+| [`qq-farm-desktop/`](.) | 桌面窗口 + 同进程 API **并托管 Web 页面**（本机 `http://127.0.0.1:9528/`） |
 
 业务逻辑在 `qq-farm-core`；桌面通过公开包 [`pkg/appserver`](../qq-farm-core/pkg/appserver) 启动（避免跨 module 引用 `internal/`）。本地联调可临时 `replace`，发布依赖 GitHub tag。
 

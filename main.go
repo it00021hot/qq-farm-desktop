@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"embed"
+	"io/fs"
 	"log"
 	"os"
 	"runtime"
@@ -43,6 +44,11 @@ func main() {
 		log.Fatal("extract farm resources: ", err)
 	}
 
+	webFS, err := fs.Sub(assets, "frontend/dist")
+	if err != nil {
+		log.Fatal("web UI embed: ", err)
+	}
+
 	backend, err := appserver.Start(appserver.Options{
 		Env:          "prod",
 		Host:         appserver.DefaultHost,
@@ -50,6 +56,7 @@ func main() {
 		DesktopMode:  true,
 		ResourceRoot: resourceRoot,
 		DataRoot:     dataRoot,
+		WebFS:        webFS,
 	})
 	if err != nil {
 		log.Fatal(err)

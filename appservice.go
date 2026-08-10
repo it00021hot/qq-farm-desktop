@@ -41,14 +41,22 @@ func (a *AppService) OpenDataDir() error {
 	if dir == "" {
 		return nil
 	}
+	return openURI(dir)
+}
+
+func (a *AppService) OpenInBrowser() error {
+	return openURI(a.GetApiBaseURL() + "/")
+}
+
+func openURI(target string) error {
 	var cmd *exec.Cmd
 	switch runtime.GOOS {
 	case "darwin":
-		cmd = exec.Command("open", dir)
+		cmd = exec.Command("open", target)
 	case "windows":
-		cmd = exec.Command("explorer", dir)
+		cmd = exec.Command("rundll32", "url.dll,FileProtocolHandler", target)
 	default:
-		cmd = exec.Command("xdg-open", dir)
+		cmd = exec.Command("xdg-open", target)
 	}
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

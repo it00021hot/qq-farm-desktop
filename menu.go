@@ -37,6 +37,9 @@ func setupApplicationMenu(app *application.App, appService *AppService) {
 	menu.AddRole(application.WindowMenu)
 
 	appMenu := menu.AddSubmenu("应用")
+	appMenu.Add("在浏览器中打开").OnClick(func(ctx *application.Context) {
+		_ = appService.OpenInBrowser()
+	})
 	appMenu.Add("打开数据目录").OnClick(func(ctx *application.Context) {
 		_ = appService.OpenDataDir()
 	})
@@ -66,6 +69,9 @@ func setupSystemTray(app *application.App, window *application.WebviewWindow, ap
 	trayMenu := app.NewMenu()
 	trayMenu.Add("显示主窗口").OnClick(func(ctx *application.Context) {
 		window.Show().Focus()
+	})
+	trayMenu.Add("在浏览器中打开").OnClick(func(ctx *application.Context) {
+		_ = appService.OpenInBrowser()
 	})
 	trayMenu.Add("打开数据目录").OnClick(func(ctx *application.Context) {
 		_ = appService.OpenDataDir()
