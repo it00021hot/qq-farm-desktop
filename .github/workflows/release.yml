@@ -59,7 +59,22 @@ jobs:
           cache-dependency-path: qq-farm-web/pnpm-lock.yaml
 
       - name: Install NSIS
-        run: choco install nsis -y
+        shell: pwsh
+        run: |
+          choco install nsis -y --no-progress
+          # Chocolatey's NSIS package can land in different layouts depending on
+          # runner/choco state; locate makensis.exe and expose its dir on PATH.
+          $makensis = Get-ChildItem -Path "C:\Program Files (x86)\NSIS\makensis.exe", "C:\Program Files\NSIS\makensis.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $makensis) {
+            $makensis = Get-ChildItem -Path "C:\ProgramData\chocolatey\lib\nsis" -Recurse -Filter makensis.exe -ErrorAction SilentlyContinue | Select-Object -First 1
+          }
+          if (-not $makensis) {
+            throw "makensis.exe not found after choco install nsis"
+          }
+          Write-Host "makensis found at $($makensis.FullName)"
+          "add-makensis-dir=$($makensis.DirectoryName)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          echo "$($makensis.DirectoryName)" >> $env:GITHUB_PATH
+        id: nsis
 
       - name: Install Wails CLI
         shell: bash

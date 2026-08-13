@@ -75,11 +75,22 @@ fi
     for candidate in \
       "/c/Program Files (x86)/NSIS/makensis.exe" \
       "/c/Program Files/NSIS/makensis.exe" \
-      "/mnt/c/Program Files (x86)/NSIS/makensis.exe"; do
+      "/mnt/c/Program Files (x86)/NSIS/makensis.exe" \
+      "/c/ProgramData/chocolatey/bin/makensis.exe" \
+      "/mnt/c/ProgramData/chocolatey/bin/makensis.exe"; do
       if [[ -f "$candidate" ]]; then
         MAKENSIS="$candidate"
         break
       fi
+    done
+  fi
+  # Chocolatey installs NSIS under its lib dir; NSIS 3.10+ on Windows may land
+  # in ProgramData or use an x64 layout, so fall back to a bounded search.
+  if [[ -z "$MAKENSIS" && "$(uname -s)" == MINGW* || "$(uname -s)" == MSYS* || "$(uname -s)" == CYGWIN* ]]; then
+    for base in "/c/ProgramData/chocolatey/lib/nsis" "/c/Program Files (x86)/NSIS" "/c/Program Files/NSIS"; do
+      [[ -d "$base" ]] || continue
+      MAKENSIS="$(find "$base" -maxdepth 3 -iname 'makensis.exe' 2>/dev/null | head -n1)"
+      [[ -n "$MAKENSIS" ]] && break
     done
   fi
   if [[ -z "$MAKENSIS" ]]; then
