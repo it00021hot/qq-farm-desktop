@@ -88,6 +88,12 @@ go build -tags production -o bin/qq-farm . && open bin/qq-farm.app
 
 ### 发版
 
+发布流程完全由 GitHub Actions 流水线触发，**本地不需要手动构建前端或同步 dist**。`frontend/dist` 在 `.gitignore` 中，不入库；打 tag 后流水线会：
+
+1. 分别 checkout `qq-farm-web` 与 `qq-farm-core`
+2. 在流水线内 `pnpm install --frozen-lockfile` + `node scripts/build.mjs` 构建前端 dist 并嵌入（见 [`scripts/build-macos-release.sh`](scripts/build-macos-release.sh) / [`scripts/build-windows-installer.sh`](scripts/build-windows-installer.sh)）
+3. 并行构建 Windows + macOS 安装包，汇总校验和后创建同名 Release
+
 ```bash
 git tag v0.2.0
 git push origin v0.2.0
@@ -98,6 +104,8 @@ Actions 会并行构建 Windows + macOS，汇总校验和后创建同名 Release
 发版后验收见 [`docs/RELEASE_CHECKLIST.md`](docs/RELEASE_CHECKLIST.md)。
 
 ### 本地打包（调试）
+
+仅限调试，正式分发一律走上面的流水线：
 
 ```bash
 # Windows（需 makensis；可在 macOS/Linux 交叉编译 exe，NSIS 建议在 Windows 上打）
@@ -134,5 +142,6 @@ VERSION=0.2.0 ./scripts/build-windows-exe.sh
 ## 前端 desktop mode
 
 - [`qq-farm-web/.env.desktop`](../qq-farm-web/.env.desktop)：`VITE_IS_DESKTOP=Y`，`VITE_SERVICE_BASE_URL=http://127.0.0.1:9528`，hash 路由，关闭代理
-- `pnpm build:desktop`
+- 前端产物由发版流水线构建并嵌入，**本地无需 `pnpm build:desktop` 或手动拷贝 dist**
+- 本地前端联调直接 `cd ../qq-farm-web && pnpm dev`（桌面窗口内用同一套 API）
 - WebSocket 从 `VITE_SERVICE_BASE_URL` 推导 host（见 `src/hooks/business/farm-ws.ts`）
