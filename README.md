@@ -1,5 +1,9 @@
 # QQ农场智能助手 · 桌面端 (Wails v3)
 
+> 维护状态：该 Go/Wails 桌面端已停止持续维护，仅保留历史实现。
+>
+> 当前维护中的版本请见 Rust 仓库：[it00021hot/qq-farm-rust](https://github.com/it00021hot/qq-farm-rust)
+
 基于 [Wails v3](https://v3.wails.io/) 的跨平台桌面壳：嵌入 [qq-farm-web](https://github.com/it00021hot/qq-farm-web) 前端，进程内启动 [qq-farm-core](https://github.com/it00021hot/qq-farm-core) Fiber API（`127.0.0.1:9528`），保留农场 WASM / WebSocket 能力。
 
 > Wails v3 目前为 beta；CLI 请锁定 `wails3@v3.0.0-beta.4` 或与本仓库 `go.mod` 一致。
