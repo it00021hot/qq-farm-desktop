@@ -15,7 +15,8 @@ import (
 var bundledFarm embed.FS
 
 // bump when embedded farm layout changes so existing installs re-extract.
-const farmBundleVersion = "2"
+// v3: tsdk.wasm 161084 字节（bot 9709bcb，协议 1.14.0.4 配套）。
+const farmBundleVersion = "3"
 
 // ensureBundledFarmResources extracts embedded farm assets into resourceRoot/resource/farm
 // when the directory is missing or incomplete.
