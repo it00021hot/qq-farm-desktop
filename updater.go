@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"runtime"
 	"time"
 
 	"github.com/it00021hot/qq-farm-desktop/internal/ghrelease"
@@ -37,8 +38,8 @@ func newUpdaterHTTPClient() *http.Client {
 	}
 }
 
-// setupUpdater wires GitHub Releases auto-update. Manual checks use the
-// builtin window; startup only opens it when an update is available.
+// setupUpdater wires GitHub Releases auto-update. Startup only prompts when
+// an update is available; the menu action reports "already up to date".
 func setupUpdater(app *application.App) {
 	gh, err := github.New(github.Config{
 		Repository:    githubReleaseRepo,
@@ -71,8 +72,26 @@ func setupUpdater(app *application.App) {
 
 	go func() {
 		time.Sleep(5 * time.Second)
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
-		defer cancel()
+		runUpdateCheck(app, false)
+	}()
+}
+
+func checkForUpdates(app *application.App) {
+	go runUpdateCheck(app, true)
+}
+
+// runUpdateCheck drives one update check. macOS keeps the wails builtin
+// update window (binary swap); Windows uses the installer-based flow in
+// updater_windows.go because a swap cannot apply an NSIS installer.
+func runUpdateCheck(app *application.App, manual bool) {
+	if runtime.GOOS == "windows" {
+		windowsUpdateFlow(app, manual)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
+	defer cancel()
+	if !manual {
 		rel, err := app.Updater.Check(ctx)
 		if err != nil {
 			log.Printf("updater: background check: %v", err)
@@ -81,18 +100,8 @@ func setupUpdater(app *application.App) {
 		if rel == nil {
 			return
 		}
-		if err := app.Updater.CheckAndInstall(ctx); err != nil {
-			log.Printf("updater: install: %v", err)
-		}
-	}()
-}
-
-func checkForUpdates(app *application.App) {
-	go func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
-		defer cancel()
-		if err := app.Updater.CheckAndInstall(ctx); err != nil {
-			log.Printf("updater: check: %v", err)
-		}
-	}()
+	}
+	if err := app.Updater.CheckAndInstall(ctx); err != nil {
+		log.Printf("updater: check: %v", err)
+	}
 }

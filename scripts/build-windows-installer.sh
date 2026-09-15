@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Build Windows amd64 update binary + NSIS per-user installer.
+# Build the Windows NSIS per-user installer (the only shipped Windows asset;
+# the in-app updater downloads it and installs silently).
 # Requires: Go, pnpm, wails3, makensis; sibling ../qq-farm-web and ../qq-farm-core.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -41,8 +42,6 @@ LDFLAGS="-w -s -H windowsgui -X main.appVersion=${VERSION}"
 GOOS=windows GOARCH="$ARCH" CGO_ENABLED=0 \
   go build -tags production -trimpath -ldflags="$LDFLAGS" -o bin/qq-farm.exe .
 rm -f "wails_windows_${ARCH}.syso"
-
-cp -f bin/qq-farm.exe "bin/qq-farm-windows-${ARCH}.exe"
 
 wails3 generate webview2bootstrapper -dir "$ROOT/build/windows/nsis"
 
@@ -106,6 +105,5 @@ fi
     project.nsi
 )
 
-echo "OK: bin/qq-farm-windows-${ARCH}.exe (auto-update asset)"
-echo "OK: bin/qq-farm-windows-${ARCH}-installer.exe (first install)"
-ls -lh "bin/qq-farm-windows-${ARCH}.exe" "bin/qq-farm-windows-${ARCH}-installer.exe"
+echo "OK: bin/qq-farm-windows-${ARCH}-installer.exe"
+ls -lh "bin/qq-farm-windows-${ARCH}-installer.exe"

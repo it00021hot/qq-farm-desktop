@@ -20,7 +20,7 @@ env:
 
 jobs:
   windows:
-    name: Build Windows
+    name: Build Windows (installer)
     runs-on: windows-latest
     steps:
       - name: Checkout desktop
@@ -89,7 +89,7 @@ jobs:
           echo "version=$VER" >> "$GITHUB_OUTPUT"
           echo "Building version $VER"
 
-      - name: Build installer + update exe
+      - name: Build installer
         shell: bash
         working-directory: qq-farm-desktop
         env:
@@ -101,18 +101,22 @@ jobs:
           fi
           bash scripts/build-windows-installer.sh
 
-      - name: Upload Windows artifacts
+      - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
           name: windows-amd64
-          path: |
-            qq-farm-desktop/bin/qq-farm-windows-amd64.exe
-            qq-farm-desktop/bin/qq-farm-windows-amd64-installer.exe
+          path: qq-farm-desktop/bin/qq-farm-windows-amd64-installer.exe
           if-no-files-found: error
 
   macos:
-    name: Build macOS
+    name: Build macOS (${{ matrix.arch }})
     runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64 # Intel
+          - arch: arm64 # Apple Silicon
     steps:
       - name: Checkout desktop
         uses: actions/checkout@v4
@@ -160,21 +164,22 @@ jobs:
           echo "version=$VER" >> "$GITHUB_OUTPUT"
           echo "Building version $VER"
 
-      - name: Build DMG + universal zip
+      - name: Build DMG + update zip
         working-directory: qq-farm-desktop
         env:
           VERSION: ${{ steps.ver.outputs.version }}
+          MAC_ARCH: ${{ matrix.arch }}
         run: |
           export PATH="$(go env GOPATH)/bin:$PATH"
           bash scripts/build-macos-release.sh
 
-      - name: Upload macOS artifacts
+      - name: Upload macOS artifact
         uses: actions/upload-artifact@v4
         with:
-          name: macos-universal
+          name: macos-${{ matrix.arch }}
           path: |
-            qq-farm-desktop/bin/qq-farm-darwin-universal.zip
-            qq-farm-desktop/bin/qq-farm-darwin.dmg
+            qq-farm-desktop/bin/qq-farm-darwin-${{ matrix.arch }}.zip
+            qq-farm-desktop/bin/qq-farm-darwin-${{ matrix.arch }}.dmg
           if-no-files-found: error
 
   publish:
@@ -190,7 +195,7 @@ jobs:
           echo "tag=v${VER}" >> "$GITHUB_OUTPUT"
           echo "version=$VER" >> "$GITHUB_OUTPUT"
 
-      - name: Download Windows artifacts
+      - name: Download Windows artifact
         uses: actions/download-artifact@v4
         with:
           name: windows-amd64
@@ -199,17 +204,24 @@ jobs:
       - name: Download macOS artifacts
         uses: actions/download-artifact@v4
         with:
-          name: macos-universal
+          name: macos-amd64
+          path: dist
+
+      - name: Download macOS artifacts (arm64)
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-arm64
           path: dist
 
       - name: Generate SHA256SUMS
         working-directory: dist
         run: |
           sha256sum \
-            qq-farm-windows-amd64.exe \
             qq-farm-windows-amd64-installer.exe \
-            qq-farm-darwin-universal.zip \
-            qq-farm-darwin.dmg \
+            qq-farm-darwin-amd64.zip \
+            qq-farm-darwin-amd64.dmg \
+            qq-farm-darwin-arm64.zip \
+            qq-farm-darwin-arm64.dmg \
             > SHA256SUMS
           cat SHA256SUMS
 
@@ -220,10 +232,11 @@ jobs:
           name: QQ Farm Desktop ${{ steps.ver.outputs.tag }}
           generate_release_notes: true
           files: |
-            dist/qq-farm-windows-amd64.exe
             dist/qq-farm-windows-amd64-installer.exe
-            dist/qq-farm-darwin-universal.zip
-            dist/qq-farm-darwin.dmg
+            dist/qq-farm-darwin-amd64.zip
+            dist/qq-farm-darwin-amd64.dmg
+            dist/qq-farm-darwin-arm64.zip
+            dist/qq-farm-darwin-arm64.dmg
             dist/SHA256SUMS
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

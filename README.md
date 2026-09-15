@@ -83,10 +83,11 @@ go build -tags production -o bin/qq-farm . && open bin/qq-farm.app
 
 | 平台 | 首次安装 | 自动更新资产 |
 |------|----------|--------------|
-| Windows x64 | `qq-farm-windows-amd64-installer.exe`（用户级，无需管理员） | `qq-farm-windows-amd64.exe` |
-| macOS | `qq-farm-darwin.dmg`（拖到 Applications） | `qq-farm-darwin-universal.zip`（整包 `.app`） |
+| Windows x64 | `qq-farm-windows-amd64-installer.exe`（用户级，无需管理员） | 同左（更新器下载安装器静默安装） |
+| macOS（Apple Silicon） | `qq-farm-darwin-arm64.dmg`（拖到 Applications） | `qq-farm-darwin-arm64.zip`（整包 `.app`） |
+| macOS（Intel） | `qq-farm-darwin-amd64.dmg`（拖到 Applications） | `qq-farm-darwin-amd64.zip`（整包 `.app`） |
 
-客户端内置 Wails Updater：启动约 5 秒后静默检查 GitHub Releases；托盘 / macOS「应用」菜单有「检查更新」。校验依赖同 Release 中的 `SHA256SUMS`。
+客户端内置 Wails Updater：启动约 5 秒后静默检查 GitHub Releases；托盘 / macOS「应用」菜单有「检查更新」。校验依赖同 Release 中的 `SHA256SUMS`。Windows 上更新走「下载安装器 → 校验 → 退出应用 → 静默安装」流程；macOS 仍为二进制原地替换。
 
 ### 发版
 
@@ -94,7 +95,7 @@ go build -tags production -o bin/qq-farm . && open bin/qq-farm.app
 
 1. 分别 checkout `qq-farm-web` 与 `qq-farm-core`
 2. 在流水线内 `pnpm install --frozen-lockfile` + `node scripts/build.mjs` 构建前端 dist 并嵌入（见 [`scripts/build-macos-release.sh`](scripts/build-macos-release.sh) / [`scripts/build-windows-installer.sh`](scripts/build-windows-installer.sh)）
-3. 并行构建 Windows + macOS 安装包，汇总校验和后创建同名 Release
+3. 并行构建 Windows 安装包 + macOS 双架构（amd64/arm64 矩阵），汇总校验和后创建同名 Release
 
 ```bash
 git tag v0.2.0
@@ -113,11 +114,12 @@ Actions 会并行构建 Windows + macOS，汇总校验和后创建同名 Release
 # Windows（需 makensis；可在 macOS/Linux 交叉编译 exe，NSIS 建议在 Windows 上打）
 VERSION=0.2.0 ./scripts/build-windows-installer.sh
 
-# macOS（须在 macOS 上，CGO + lipo）
-VERSION=0.2.0 ./scripts/build-macos-release.sh
+# macOS（须在 macOS 上；按架构分别构建）
+MAC_ARCH=arm64 VERSION=0.2.0 ./scripts/build-macos-release.sh  # Apple Silicon
+MAC_ARCH=amd64 VERSION=0.2.0 ./scripts/build-macos-release.sh  # Intel
 ```
 
-便携 exe（不推荐分发）：
+本地调试用裸 exe（不分发）：
 
 ```bash
 VERSION=0.2.0 ./scripts/build-windows-exe.sh

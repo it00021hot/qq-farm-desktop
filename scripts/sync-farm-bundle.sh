@@ -46,3 +46,10 @@ if [[ "$count" -lt 1 ]]; then
 fi
 
 echo "synced farm resources → $DEST ($count seed icons)"
+
+# Deduplicate byte-identical seed images (bundle_farm.go restores them from
+# duplicate_images.json at extraction time).
+PYTHON=python3
+command -v python3 >/dev/null 2>&1 || PYTHON=python
+"$PYTHON" "$ROOT/scripts/dedupe_seed_images.py"
+
