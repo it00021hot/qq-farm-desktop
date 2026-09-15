@@ -78,7 +78,7 @@ func farmResourcesReady(dest string) bool {
 		return false
 	}
 	// Crop / activity icons must be real files (not a leftover symlink).
-	iconSample := filepath.Join(dest, "gameConfig", "seed_images_named", "100001.png")
+	iconSample := filepath.Join(dest, "gameConfig", "seed_images_named", "seed_images", "100001.webp")
 	st, err := os.Lstat(iconSample)
 	if err != nil || st.Size() == 0 || st.Mode()&os.ModeSymlink != 0 {
 		return false

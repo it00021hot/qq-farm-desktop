@@ -39,9 +39,9 @@ if [[ -L "$icon_dir" ]] || [[ ! -d "$icon_dir" ]]; then
   echo "seed_images_named must be a real directory after sync (got: $(ls -ld "$icon_dir" 2>/dev/null || echo missing))" >&2
   exit 1
 fi
-count="$(find "$icon_dir" -type f -name '*.png' | wc -l | tr -d ' ')"
+count="$(find "$icon_dir" -type f \( -name '*.webp' -o -name '*.png' \) | wc -l | tr -d ' ')"
 if [[ "$count" -lt 1 ]]; then
-  echo "no PNG icons under $icon_dir" >&2
+  echo "no icons (webp/png) under $icon_dir" >&2
   exit 1
 fi
 
