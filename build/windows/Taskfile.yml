@@ -83,7 +83,7 @@ tasks:
       ARCH: '{{.ARCH | default ARCH}}'
 
   create:nsis:installer:
-    summary: Creates an NSIS installer (default: per-user)
+    summary: "Creates an NSIS installer (default: per-user)"
     dir: build/windows/nsis
     deps:
       - task: build

@@ -4,7 +4,7 @@
 
 基于 [Wails v3](https://v3.wails.io/) 的跨平台桌面壳：嵌入 [qq-farm-web](https://github.com/it00021hot/qq-farm-web) 前端，进程内启动 [qq-farm-core](https://github.com/it00021hot/qq-farm-core) Fiber API（`127.0.0.1:9528`），保留农场 WASM / WebSocket 能力。
 
-> Wails v3 目前为 beta；CLI 请锁定 `wails3@v3.0.0-beta.4` 或与本仓库 `go.mod` 一致。
+> Wails v3 目前为 beta；CLI 请锁定 `wails3@v3.0.0-beta.22` 或与本仓库 `go.mod` 一致。
 
 Go 模块：`github.com/it00021hot/qq-farm-desktop`  
 依赖：`github.com/it00021hot/qq-farm-core` 与 `qq-farm-web` 均以 **git submodule** 形式随本仓库分发（`core/`、`frontend/`），Go 侧通过 `replace => ./core` 本地链接。
@@ -35,7 +35,7 @@ Wails process
 
 ```bash
 # Go 1.25+、（macOS）Xcode CLT + CGO、pnpm、Wails CLI
-go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-beta.4
+go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-beta.22
 wails3 doctor
 ```
 
