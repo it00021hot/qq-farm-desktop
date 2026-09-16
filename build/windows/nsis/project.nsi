@@ -65,10 +65,16 @@ Section "Uninstall"
     !insertmacro wails.deleteUninstaller
 SectionEnd
 
-; In-app updates install with /S (silent): relaunch the app afterwards so the
+; In-app updates install with /S (silent): drop a result marker the app reads
+; on next start (one-shot "updated to vX.Y.Z" message), then relaunch so the
 ; update ends with the new version running. Interactive installs are unchanged.
 Function .onInstSuccess
-    IfSilent 0 +3
+    IfSilent silent_update done
+silent_update:
+    FileOpen $0 "$TEMP\qq-farm-update-result.txt" w
+    FileWrite $0 "${INFO_PRODUCTVERSION}"
+    FileClose $0
     SetOutPath "$INSTDIR"
     Exec '"$INSTDIR\${PRODUCT_EXECUTABLE}"'
+done:
 FunctionEnd

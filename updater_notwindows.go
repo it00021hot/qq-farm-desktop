@@ -11,3 +11,7 @@ func windowsUpdateFlow(app *application.App, manual bool) {
 	_ = app
 	_ = manual
 }
+
+// notifyUpdateResult reports a finished silent update on Windows only; the
+// non-windows restart flow already has its own UI.
+func notifyUpdateResult() {}

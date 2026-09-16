@@ -74,6 +74,13 @@ func setupUpdater(app *application.App) {
 		time.Sleep(5 * time.Second)
 		runUpdateCheck(app, false)
 	}()
+
+	// One-shot "updated to vX.Y.Z" confirmation: the NSIS installer drops a
+	// result marker before relaunching (see updater_windows.go).
+	go func() {
+		time.Sleep(1500 * time.Millisecond)
+		notifyUpdateResult()
+	}()
 }
 
 func checkForUpdates(app *application.App) {

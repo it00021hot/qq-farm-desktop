@@ -96,4 +96,4 @@ git commit -m "chore: 升级 core 至 vX.Y.Z（……）"
 4. GitHub Actions `Release` workflow（`.github/workflows/release.yml`）：单次 checkout + `submodules: recursive`，Windows 与 macOS(amd64/arm64 矩阵) 并行构建，`publish` job 汇总生成 `SHA256SUMS` 并创建 GitHub Release。
 5. 按 `docs/RELEASE_CHECKLIST.md` 验收：产物五件（Windows installer、mac 双架构 zip+dmg）+ SHA256SUMS；**没有**便携 exe 与 universal 包。
 
-更新器行为（改 updater*.go / internal/ghrelease 时注意）：启动约 5 秒静默检查 Releases；Windows 更新资产 = 安装器（静默安装），macOS = 对应架构的 `.zip`（非 dmg）；校验依赖 Release 内 `SHA256SUMS`。Windows 静默安装完成后由 NSIS 的 `.onInstSuccess`（仅 `/S` 生效）自动重启新版应用——该逻辑在安装器里，所以旧版本应用更新时也能享受；改 `build/windows/nsis/project.nsi` 后须用 makensis 本地编译验证再发版。
+更新器行为（改 updater*.go / internal/ghrelease 时注意）：启动约 5 秒静默检查 Releases；Windows 更新资产 = 安装器（静默安装），macOS = 对应架构的 `.zip`（非 dmg）；校验依赖 Release 内 `SHA256SUMS`。Windows 静默装完的结果反馈链路：NSIS `.onInstSuccess`（仅 `/S`）写版本标记到 `%TEMP%\qq-farm-update-result.txt` 并重启新版，新版启动时读标记弹一次"已成功更新到 vX.Y.Z"；安装失败由批处理 `if errorlevel 1` 弹 `qq-farm-update-fail.vbs`（UTF-16LE，Go 写入）指路手动安装——标记/弹窗的文件名与路径是 NSIS 与 Go 两侧的约定，改动须两处同步并用 makensis 本地编译验证。
