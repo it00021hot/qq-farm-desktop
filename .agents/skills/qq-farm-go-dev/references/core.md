@@ -1,6 +1,6 @@
 # core 后端开发参考（qq-farm-core）
 
-模块 `github.com/it00021hot/qq-farm-core`，Go 1.26。**技术栈：Fiber v3 + GORM + Viper + log/slog + Turso（SQLite 兼容）**。仓库里虽有 `gogf/gf` 依赖，但只在一个文件用了 `gstr`——这不是 GoFrame 项目，不要引入 GoFrame 写法（无 g.Meta、无 g.Cfg、无 g.DB、无 gerror）。
+模块 `github.com/it00021hot/qq-farm-core`，Go 1.26。**技术栈：Fiber v3 + GORM + Viper + log/slog + Turso（SQLite 兼容）**。这不是 GoFrame 项目（曾误引入的 `gogf/gf` 依赖已移除），不要使用 GoFrame 写法（无 g.Meta、无 g.Cfg、无 g.DB、无 gerror）。
 
 ## 目录结构
 
