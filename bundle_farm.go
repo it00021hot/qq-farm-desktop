@@ -21,7 +21,9 @@ var bundledFarm embed.FS
 // v4: seed_images_named 构建期按内容去重（duplicate_images.json 清单），
 //
 //	提取时按清单从规范副本复制回重复文件，磁盘布局与去重前一致。
-const farmBundleVersion = "4"
+//
+// v5: activity-data/pet-diary-*.json 加入 embed（萌宠成长日记活动数据）。
+const farmBundleVersion = "5"
 
 // duplicateImagesManifest is generated at build time by
 // scripts/dedupe_seed_images.py: keys are duplicate image paths relative to
