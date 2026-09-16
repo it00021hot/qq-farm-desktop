@@ -2,7 +2,8 @@
 # Build a single-architecture macOS .app, zip (auto-update) and DMG (first
 # install). Run once per architecture: MAC_ARCH=amd64 (Intel) or MAC_ARCH=arm64
 # (Apple Silicon); CI runs the two architectures as separate jobs.
-# Must run on macOS with CGO. Requires sibling ../qq-farm-web and ../qq-farm-core.
+# Must run on macOS with CGO. Requires the core/ and frontend/ (qq-farm-web)
+# submodules (git clone --recurse-submodules).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
@@ -43,8 +44,7 @@ mkdir -p "${BIN_DIR}"
 rm -f "${BIN_DIR}/qq-farm-darwin-universal.zip" "${BIN_DIR}/qq-farm-darwin.dmg"
 
 bash scripts/sync-farm-bundle.sh
-(cd ../qq-farm-web && pnpm install --frozen-lockfile)
-(cd frontend && node scripts/build.mjs)
+(cd frontend && pnpm install --frozen-lockfile && pnpm run build:desktop)
 
 export CGO_ENABLED=1
 export MACOSX_DEPLOYMENT_TARGET=12.0

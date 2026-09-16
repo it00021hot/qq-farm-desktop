@@ -7,7 +7,7 @@
 > Wails v3 目前为 beta；CLI 请锁定 `wails3@v3.0.0-beta.4` 或与本仓库 `go.mod` 一致。
 
 Go 模块：`github.com/it00021hot/qq-farm-desktop`  
-依赖：`github.com/it00021hot/qq-farm-core`（默认从 GitHub tag 拉取，例如 `v0.1.0`）
+依赖：`github.com/it00021hot/qq-farm-core` 与 `qq-farm-web` 均以 **git submodule** 形式随本仓库分发（`core/`、`frontend/`），Go 侧通过 `replace => ./core` 本地链接。
 
 ## 架构
 
@@ -39,13 +39,21 @@ go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-beta.4
 wails3 doctor
 ```
 
-同级目录建议同时克隆：
+克隆本仓库（连同子模块）：
 
 ```bash
-# .../qq-farm/
-#   qq-farm-core/
-#   qq-farm-web/
-#   qq-farm-desktop/   ← 本仓库
+git clone --recurse-submodules git@github.com:it00021hot/qq-farm-desktop.git
+# 已克隆过的补拉子模块：
+git submodule update --init --recursive
+```
+
+仓库结构：
+
+```
+qq-farm-desktop/
+├── core/       ← submodule: qq-farm-core（Go 后端）
+├── frontend/   ← submodule: qq-farm-web（Vue3 前端，构建产物 dist 被 go:embed）
+└── ...         ← Wails 桌面壳
 ```
 
 ## 开发
@@ -54,10 +62,10 @@ wails3 doctor
 
 ```bash
 # 终端 1
-cd ../qq-farm-core && make run
+cd core && make run
 
 # 终端 2
-cd ../qq-farm-web && pnpm dev
+cd frontend && pnpm dev
 ```
 
 桌面一体调试：
@@ -91,10 +99,10 @@ go build -tags production -o bin/qq-farm . && open bin/qq-farm.app
 
 ### 发版
 
-发布流程完全由 GitHub Actions 流水线触发，**本地不需要手动构建前端或同步 dist**。`frontend/dist` 在 `.gitignore` 中，不入库；打 tag 后流水线会：
+发布流程完全由 GitHub Actions 流水线触发，**本地不需要手动构建前端或同步 dist**。`frontend/dist` 不入库（子模块自身 `.gitignore`）；打 tag 后流水线会：
 
-1. 分别 checkout `qq-farm-web` 与 `qq-farm-core`
-2. 在流水线内 `pnpm install --frozen-lockfile` + `node scripts/build.mjs` 构建前端 dist 并嵌入（见 [`scripts/build-macos-release.sh`](scripts/build-macos-release.sh) / [`scripts/build-windows-installer.sh`](scripts/build-windows-installer.sh)）
+1. checkout 本仓库并 `submodules: recursive` 拉取 `core/` 与 `frontend/`
+2. 在流水线内 `pnpm install --frozen-lockfile` + `pnpm run build:desktop` 构建前端 dist 并嵌入（见 [`scripts/build-macos-release.sh`](scripts/build-macos-release.sh) / [`scripts/build-windows-installer.sh`](scripts/build-windows-installer.sh)）
 3. 并行构建 Windows 安装包 + macOS 双架构（amd64/arm64 矩阵），汇总校验和后创建同名 Release
 
 ```bash
@@ -138,14 +146,14 @@ VERSION=0.2.0 ./scripts/build-windows-exe.sh
 
 | 入口 | 用途 |
 |------|------|
-| [`qq-farm-core/cmd/app`](../qq-farm-core/cmd/app) | 纯 HTTP API（需另挂 `qq-farm-web` dist 或 `pnpm dev`） |
+| [`core/cmd/app`](core/cmd/app) | 纯 HTTP API（需另挂 `qq-farm-web` dist 或 `pnpm dev`） |
 | [`qq-farm-desktop/`](.) | 桌面窗口 + 同进程 API **并托管 Web 页面**（本机 `http://127.0.0.1:9528/`） |
 
-业务逻辑在 `qq-farm-core`；桌面通过公开包 [`pkg/appserver`](../qq-farm-core/pkg/appserver) 启动（避免跨 module 引用 `internal/`）。本地联调可临时 `replace`，发布依赖 GitHub tag。
+业务逻辑在 `core`（qq-farm-core）；桌面通过公开包 [`pkg/appserver`](core/pkg/appserver) 启动（避免跨 module 引用 `internal/`）。本地开发由 `replace => ./core` 指向子模块，发布时升 core 版本号后更新子模块指针即可。
 
 ## 前端 desktop mode
 
-- [`qq-farm-web/.env.desktop`](../qq-farm-web/.env.desktop)：`VITE_IS_DESKTOP=Y`，`VITE_SERVICE_BASE_URL=http://127.0.0.1:9528`，hash 路由，关闭代理
+- [`frontend/.env.desktop`](frontend/.env.desktop)：`VITE_IS_DESKTOP=Y`，`VITE_SERVICE_BASE_URL=http://127.0.0.1:9528`，hash 路由，关闭代理
 - 前端产物由发版流水线构建并嵌入，**本地无需 `pnpm build:desktop` 或手动拷贝 dist**
-- 本地前端联调直接 `cd ../qq-farm-web && pnpm dev`（桌面窗口内用同一套 API）
+- 本地前端联调直接 `cd frontend && pnpm dev`（桌面窗口内用同一套 API）
 - WebSocket 从 `VITE_SERVICE_BASE_URL` 推导 host（见 `src/hooks/business/farm-ws.ts`）

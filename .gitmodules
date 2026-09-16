@@ -1,0 +1,6 @@
+[submodule "frontend"]
+	path = frontend
+	url = git@github.com:it00021hot/qq-farm-web.git
+[submodule "core"]
+	path = core
+	url = git@github.com:it00021hot/qq-farm-core.git

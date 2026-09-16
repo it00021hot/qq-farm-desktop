@@ -3,7 +3,7 @@
 # so go:embed gets real seed_images_named PNGs (not a broken absolute symlink).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-SRC="$ROOT/../qq-farm-core/resource/farm"
+SRC="$ROOT/core/resource/farm"
 DEST="$ROOT/bundled/resource/farm"
 
 if [[ ! -d "$SRC" ]]; then

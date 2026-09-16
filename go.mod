@@ -7,7 +7,7 @@ require (
 	github.com/wailsapp/wails/v3 v3.0.0-beta.4
 )
 
-replace github.com/it00021hot/qq-farm-core => ../qq-farm-core
+replace github.com/it00021hot/qq-farm-core => ./core
 
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect

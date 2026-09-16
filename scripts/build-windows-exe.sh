@@ -12,8 +12,8 @@ VERSION="${VERSION#v}"
 # Keep embedded farm assets in sync (dereference seed_images_named symlink)
 bash scripts/sync-farm-bundle.sh
 
-# Frontend for embed
-(cd frontend && node scripts/build.mjs)
+# Frontend for embed (qq-farm-web submodule; outputs to frontend/dist)
+(cd frontend && pnpm install --frozen-lockfile && pnpm run build:desktop)
 
 rm -f wails_windows_amd64.syso
 wails3 generate syso -arch amd64 \

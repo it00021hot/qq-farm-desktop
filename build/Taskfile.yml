@@ -11,39 +11,8 @@ tasks:
       - go mod tidy
 
   install:frontend:deps:
-    summary: Install frontend dependencies
+    summary: Install frontend dependencies (pnpm workspace)
     run: once
-    cmds:
-      - task: install:frontend:deps:{{.PACKAGE_MANAGER}}
-
-  install:frontend:deps:npm:
-    dir: frontend
-    sources:
-      - package.json
-      - package-lock.json
-    generates:
-      - node_modules
-    preconditions:
-      - sh: npm version
-        msg: "Looks like npm isn't installed. Npm is part of the Node installer: https://nodejs.org/en/download/"
-    cmds:
-      - npm install
-
-  install:frontend:deps:bun:
-    dir: frontend
-    sources:
-      - package.json
-      - bun.lock
-      - bun.lockb
-    generates:
-      - node_modules
-    preconditions:
-      - sh: bun --version
-        msg: "bun not found"
-    cmds:
-      - bun install
-
-  install:frontend:deps:pnpm:
     dir: frontend
     sources:
       - package.json
@@ -52,31 +21,17 @@ tasks:
       - node_modules
     preconditions:
       - sh: pnpm --version
-        msg: "pnpm not found"
+        msg: "pnpm not found. The frontend (qq-farm-web submodule) is a pnpm workspace: https://pnpm.io/installation"
     cmds:
       - pnpm install
 
-  install:frontend:deps:yarn:
-    dir: frontend
-    sources:
-      - package.json
-      - yarn.lock
-    status:
-      - test -d node_modules || test -f .pnp.cjs
-    preconditions:
-      - sh: yarn --version
-        msg: "yarn not found"
-    cmds:
-      - yarn install
-
   build:frontend:
-    label: build:frontend (DEV={{.DEV}} RUNNER={{.PACKAGE_MANAGER}})
+    label: build:frontend (DEV={{.DEV}})
     summary: Build the frontend project
     # CI builds Windows and macOS (per-arch) jobs in parallel, each invoking
     # this task. Without run:once concurrent executions race: one regenerates
     # frontend/bindings (-clean deletes it first) while the other's bundler is
-    # reading it, failing intermittently with
-    # 'Could not resolve "./bindings/<pkg>"' (#4637).
+    # reading it, failing intermittently (#4637).
     run: once
     dir: frontend
     sources:
@@ -93,85 +48,9 @@ tasks:
           OBFUSCATED:
             ref: .OBFUSCATED
     cmds:
-      - task: frontend:run
-        vars:
-          SCRIPT: '{{if eq .DEV "true"}}build:dev{{else}}build{{end}}'
-    env:
-      PRODUCTION: '{{if eq .DEV "true"}}false{{else}}true{{end}}'
-
-  frontend:run:
-    summary: Run a frontend script with selected runner
-    cmds:
-      - task: frontend:run:{{.PACKAGE_MANAGER}}
-        vars:
-          SCRIPT: "{{.SCRIPT}}"
-    vars:
-      SCRIPT: "{{.SCRIPT}}"
-
-  frontend:run:npm:
-    dir: frontend
-    cmds:
-      - npm run {{.SCRIPT}} -q
-    vars:
-      SCRIPT: "{{.SCRIPT}}"
-
-  frontend:run:yarn:
-    dir: frontend
-    cmds:
-      - yarn {{.SCRIPT}}
-    vars:
-      SCRIPT: "{{.SCRIPT}}"
-
-  frontend:run:pnpm:
-    dir: frontend
-    cmds:
-      - pnpm run {{.SCRIPT}}
-    vars:
-      SCRIPT: "{{.SCRIPT}}"
-
-  frontend:run:bun:
-    dir: frontend
-    cmds:
-      - bun run {{.SCRIPT}}
-    vars:
-      SCRIPT: "{{.SCRIPT}}"
-
-  frontend:vendor:puppertino:
-    summary: Fetches Puppertino CSS into frontend/public for consistent mobile styling
-    sources:
-      - frontend/public/puppertino/puppertino.css
-    generates:
-      - frontend/public/puppertino/puppertino.css
-    cmds:
-      - |
-        set -euo pipefail
-        mkdir -p frontend/public/puppertino
-        # If bundled Puppertino exists, prefer it. Otherwise, try to fetch, but don't fail build on error.
-        if [ ! -f frontend/public/puppertino/puppertino.css ]; then
-          echo "No bundled Puppertino found. Attempting to fetch from GitHub..."
-          if curl -fsSL https://raw.githubusercontent.com/codedgar/Puppertino/main/dist/css/full.css -o frontend/public/puppertino/puppertino.css; then
-            curl -fsSL https://raw.githubusercontent.com/codedgar/Puppertino/main/LICENSE -o frontend/public/puppertino/LICENSE || true
-            echo "Puppertino CSS downloaded to frontend/public/puppertino/puppertino.css"
-          else
-            echo "Warning: Could not fetch Puppertino CSS. Proceeding without download since template may bundle it."
-          fi
-        else
-          echo "Using bundled Puppertino at frontend/public/puppertino/puppertino.css"
-        fi
-        # Ensure index.html includes Puppertino CSS and button classes
-        INDEX_HTML=frontend/index.html
-        if [ -f "$INDEX_HTML" ]; then
-          if ! grep -q 'href="/puppertino/puppertino.css"' "$INDEX_HTML"; then
-            # Insert Puppertino link tag after style.css link
-            awk '
-              /href="\/style.css"\/?/ && !x { print; print "    <link rel=\"stylesheet\" href=\"/puppertino/puppertino.css\"/>"; x=1; next }1
-            ' "$INDEX_HTML" > "$INDEX_HTML.tmp" && mv "$INDEX_HTML.tmp" "$INDEX_HTML"
-          fi
-          # Replace default .btn with Puppertino primary button classes if present
-          sed -E -i'' 's/class=\"btn\"/class=\"p-btn p-prim-col\"/g' "$INDEX_HTML" || true
-        fi
-
-
+      # The frontend is the qq-farm-web submodule; its desktop-mode build
+      # outputs straight to frontend/dist, which main.go embeds.
+      - pnpm run build:desktop
 
   generate:bindings:
     summary: Generates bindings for the frontend
@@ -205,28 +84,10 @@ tasks:
     summary: Runs the frontend in development mode
     deps:
       - task: install:frontend:deps
-    cmds:
-      - task: frontend:dev:{{.PACKAGE_MANAGER}}
-
-  frontend:dev:npm:
     dir: frontend
     cmds:
-      - npm run dev -- --port {{.VITE_PORT}} --strictPort
-
-  frontend:dev:yarn:
-    dir: frontend
-    cmds:
-      - yarn dev --port {{.VITE_PORT}} --strictPort
-
-  frontend:dev:pnpm:
-    dir: frontend
-    cmds:
-      - pnpm dev --port {{.VITE_PORT}} --strictPort
-
-  frontend:dev:bun:
-    dir: frontend
-    cmds:
-      - bun run dev --port {{.VITE_PORT}} --strictPort
+      # vite in desktop mode (replaces the old shim's scripts/dev.mjs).
+      - pnpm exec vite --mode desktop --host 127.0.0.1 --port {{.VITE_PORT}} --strictPort
 
   update:build-assets:
     summary: Updates the build assets

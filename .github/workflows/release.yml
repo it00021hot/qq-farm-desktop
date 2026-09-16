@@ -23,22 +23,16 @@ jobs:
     name: Build Windows (installer)
     runs-on: windows-latest
     steps:
-      - name: Checkout desktop
+      # .gitmodules uses SSH URLs; rewrite to HTTPS so the job token can fetch
+      # the core/ and frontend/ submodules.
+      - name: Rewrite submodule URLs to HTTPS
+        run: git config --global url."https://github.com/".insteadOf "git@github.com:"
+
+      - name: Checkout desktop (with submodules)
         uses: actions/checkout@v4
         with:
           path: qq-farm-desktop
-
-      - name: Checkout qq-farm-web
-        uses: actions/checkout@v4
-        with:
-          repository: it00021hot/qq-farm-web
-          path: qq-farm-web
-
-      - name: Checkout qq-farm-core
-        uses: actions/checkout@v4
-        with:
-          repository: it00021hot/qq-farm-core
-          path: qq-farm-core
+          submodules: recursive
 
       - name: Setup Go
         uses: actions/setup-go@v5
@@ -56,7 +50,7 @@ jobs:
         with:
           node-version: "22"
           cache: pnpm
-          cache-dependency-path: qq-farm-web/pnpm-lock.yaml
+          cache-dependency-path: qq-farm-desktop/frontend/pnpm-lock.yaml
 
       - name: Install NSIS
         shell: pwsh
@@ -118,22 +112,16 @@ jobs:
           - arch: amd64 # Intel
           - arch: arm64 # Apple Silicon
     steps:
-      - name: Checkout desktop
+      # .gitmodules uses SSH URLs; rewrite to HTTPS so the job token can fetch
+      # the core/ and frontend/ submodules.
+      - name: Rewrite submodule URLs to HTTPS
+        run: git config --global url."https://github.com/".insteadOf "git@github.com:"
+
+      - name: Checkout desktop (with submodules)
         uses: actions/checkout@v4
         with:
           path: qq-farm-desktop
-
-      - name: Checkout qq-farm-web
-        uses: actions/checkout@v4
-        with:
-          repository: it00021hot/qq-farm-web
-          path: qq-farm-web
-
-      - name: Checkout qq-farm-core
-        uses: actions/checkout@v4
-        with:
-          repository: it00021hot/qq-farm-core
-          path: qq-farm-core
+          submodules: recursive
 
       - name: Setup Go
         uses: actions/setup-go@v5
@@ -151,7 +139,7 @@ jobs:
         with:
           node-version: "22"
           cache: pnpm
-          cache-dependency-path: qq-farm-web/pnpm-lock.yaml
+          cache-dependency-path: qq-farm-desktop/frontend/pnpm-lock.yaml
 
       - name: Install Wails CLI
         run: go install github.com/wailsapp/wails/v3/cmd/wails3@${{ env.WAILS_VERSION }}

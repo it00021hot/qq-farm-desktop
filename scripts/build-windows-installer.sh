@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Build the Windows NSIS per-user installer (the only shipped Windows asset;
 # the in-app updater downloads it and installs silently).
-# Requires: Go, pnpm, wails3, makensis; sibling ../qq-farm-web and ../qq-farm-core.
+# Requires: Go, pnpm, wails3, makensis; the core/ and frontend/ (qq-farm-web)
+# submodules (git clone --recurse-submodules).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
@@ -15,8 +16,7 @@ INSTALL_SCOPE="${INSTALL_SCOPE:-user}"
 mkdir -p bin
 
 bash scripts/sync-farm-bundle.sh
-(cd ../qq-farm-web && pnpm install --frozen-lockfile)
-(cd frontend && node scripts/build.mjs)
+(cd frontend && pnpm install --frozen-lockfile && pnpm run build:desktop)
 
 # Keep VERSIONINFO in sync for the .syso
 PYTHON=python3
