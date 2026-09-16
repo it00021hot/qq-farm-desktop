@@ -66,10 +66,19 @@ rm -f "$APP/Contents/Resources/Assets.car"
 mkdir -p "$APP/Contents/Resources/resource"
 rm -rf "$APP/Contents/Resources/resource/farm"
 cp -R bundled/resource/farm "$APP/Contents/Resources/resource/farm"
-cp "$BIN" "$APP/Contents/MacOS/"
+# The in-bundle binary must be named exactly CFBundleExecutable ("qq-farm"),
+# regardless of build arch — Launch Services launches via that name, and a
+# mismatch ships an app macOS refuses to open ("executable is missing").
+cp "$BIN" "$APP/Contents/MacOS/${APP_NAME}"
 cp build/darwin/Info.plist "$APP/Contents/"
 codesign --force --deep --sign - "$APP"
 rm -f "$BIN"
+
+EXEC_NAME="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$APP/Contents/Info.plist")"
+if [[ ! -x "$APP/Contents/MacOS/$EXEC_NAME" ]]; then
+  echo "FATAL: Contents/MacOS/$EXEC_NAME (CFBundleExecutable) missing or not executable" >&2
+  exit 1
+fi
 
 # Zip for auto-update (single top-level .app entry)
 ZIP_OUT="${BIN_DIR}/qq-farm-darwin-${MAC_ARCH}.zip"

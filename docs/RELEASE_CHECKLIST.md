@@ -23,6 +23,7 @@ Use after pushing a `v*` tag (or `workflow_dispatch` with a tag).
 ## macOS
 
 - [ ] Open the DMG matching the Mac's architecture, drag to Applications (or `~/Applications`)
+- [ ] App actually opens: `Contents/MacOS/<CFBundleExecutable>` exists (v0.1.22–v0.2.1 shipped `qq-farm-{arch}` binaries that macOS refused to launch)
 - [ ] First open may need Privacy & Security allow (ad-hoc signed)
 - [ ] Tray / 应用 menu **检查更新** works against a newer Release zip
 - [ ] Intel Mac only sees `qq-farm-darwin-amd64.zip` as update; Apple Silicon only `qq-farm-darwin-arm64.zip`
