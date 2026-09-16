@@ -64,3 +64,11 @@ Section "Uninstall"
     Delete "$DESKTOP\${INFO_PRODUCTNAME}.lnk"
     !insertmacro wails.deleteUninstaller
 SectionEnd
+
+; In-app updates install with /S (silent): relaunch the app afterwards so the
+; update ends with the new version running. Interactive installs are unchanged.
+Function .onInstSuccess
+    IfSilent 0 +3
+    SetOutPath "$INSTDIR"
+    Exec '"$INSTDIR\${PRODUCT_EXECUTABLE}"'
+FunctionEnd
